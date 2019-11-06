@@ -1,3 +1,6 @@
+from task import Task
+
+
 class Scheduler(object):
 
     def __init__(self, task_count: int, exec_time: int, ap1188: int, ap918: int,
@@ -12,20 +15,21 @@ class Scheduler(object):
         self.sch_type = sch_type
         self.ee = ee
 
-    def schedule(self):
+    def schedule(self, tasks: list(Task)):
         if self.sch_type.lower() is 'edf' and self.ee is False:
-            self.EDF()
+            self.EDF(tasks)
         elif self.sch_type.lower() is 'rm' and self.ee is False:
-            self.RM()
+            self.RM(tasks)
         elif self.sch_type.lower() is 'edf' and self.ee is True:
             self.EDF_EE()
         elif self.sch_type.lower() is 'rm' and self.ee is True:
             self.RM_EE()
 
-    def EDF(self):
+    def EDF(self, tasks: list(Task)):
         pass
 
-    def RM(self):
+    def RM(self, tasks: list(Task)):
+        time_units = [None] * self.exec_time
         pass
 
     def EDF_EE(self):
