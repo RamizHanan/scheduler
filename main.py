@@ -41,9 +41,12 @@ def main():
     sch = create_scheduler(file_name, schedule_type, EE_enable)
     tasks = create_tasks(file_name)
 
+    print('-----')
+    print(sch)
     for task in tasks:
         print(task)
-    print(sch)
+
+    sch.schedule(tasks)
 
 
 if __name__ == '__main__':
