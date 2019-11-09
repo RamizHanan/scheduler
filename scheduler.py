@@ -1,6 +1,3 @@
-from task import Task
-
-
 class Scheduler(object):
 
     def __init__(self, task_count: int, exec_time: int, ap1188: int, ap918: int,
@@ -14,21 +11,36 @@ class Scheduler(object):
         self.apidle = apidle
         self.sch_type = sch_type
         self.ee = ee
+        
 
-    def schedule(self, tasks: list(Task)):
-        if self.sch_type.lower() is 'edf' and self.ee is False:
+    def schedule(self, tasks):
+        if self.sch_type.lower() == 'edf' and self.ee is False:
             self.EDF(tasks)
-        elif self.sch_type.lower() is 'rm' and self.ee is False:
+        elif self.sch_type.lower() == 'rm' and self.ee is False:
             self.RM(tasks)
-        elif self.sch_type.lower() is 'edf' and self.ee is True:
+        elif self.sch_type.lower() == 'edf' and self.ee is True:
             self.EDF_EE()
-        elif self.sch_type.lower() is 'rm' and self.ee is True:
+        elif self.sch_type.lower() == 'rm' and self.ee is True:
             self.RM_EE()
 
-    def EDF(self, tasks: list(Task)):
+    def EDF(self, tasks):
+        # for i in range(len(tasks)):
+        #     print(tasks[i].name)
+
+         #Check utilization
+        utilization = 0
+        for taskNum in range(len(tasks)):
+            execution = tasks[taskNum].wcet1188
+            deadline = tasks[taskNum].deadline
+            utilization += float(execution) / float(deadline)
+            
+            print(utilization)
+        if utilization > 1:
+            print('Utilization error!')
+
         pass
 
-    def RM(self, tasks: list(Task)):
+    def RM(self, tasks):
         time_units = [None] * self.exec_time
         pass
 

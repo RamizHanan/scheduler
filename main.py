@@ -35,16 +35,17 @@ def main():
     schedule_type = args.scheduler
     EE_enable = False if args.EE is '' else True
 
-    print('SCH: {}'.format(schedule_type))
-    print('EE: {}'.format(EE_enable))
+    #print('SCH: {}'.format(schedule_type))
+    #print('EE: {}'.format(EE_enable))
 
     sch = create_scheduler(file_name, schedule_type, EE_enable)
     tasks = create_tasks(file_name)
-
+    '''
     for task in tasks:
         print(task)
     print(sch)
-
+    '''
+    sch.schedule(tasks)
 
 if __name__ == '__main__':
     main()
