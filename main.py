@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import argparse
 from task import Task
 from scheduler import Scheduler

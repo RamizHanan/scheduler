@@ -41,22 +41,14 @@ class Scheduler(object):
                 count = count + 1
                 x = x + (task.deadline)
             deadlines = [1] + [x * task.deadline for x in range(1, count + 1)]
-            #print(task)
-            #for dead in deadlines:
-            #    print(dead)
-            #print('==')
-            # add task to schedule
             for deadline in deadlines:
                 pos = deadline - 1
-                #print('POS: {}'.format(pos))
                 exec_time = copy.deepcopy(task.wcet1188)
-                #print('TIME: {}'.format(exec_time))
                 while(exec_time > 0 and pos < self.exec_time):
                     if time_units[pos] is None:
                         time_units[pos] = task.name
                         exec_time -= 1
                     pos += 1
-        #print(time_units)
         res = []
         start = 1
         for key, group in groupby(time_units):
