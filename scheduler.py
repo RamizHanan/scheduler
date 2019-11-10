@@ -77,9 +77,9 @@ class Scheduler(object):
             end = start + burst_length - 1
             index = list(str(key))[-1]
             if str(index).isdigit():
-                res.append((start, key, '1188', end, round(burst_length * self.ap1188, 3)))
+                res.append((start, key, '1188', end, str(round(burst_length * self.ap1188, 3)) + 'J'))
             else:
-                res.append((start, 'IDLE', 'IDLE', end, round(burst_length * self.apidle, 3)))
+                res.append((start, 'IDLE', 'IDLE', end, str(round(burst_length * self.apidle, 3)) + 'J'))
             start = end + 1
         return res
 
