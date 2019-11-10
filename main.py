@@ -42,6 +42,8 @@ def main():
     tasks = create_tasks(file_name)
 
     timing_diag = sch.schedule(tasks)
+    if len(timing_diag) == 0:
+        print('COULD NOT SCHEDULE')
     for burst in timing_diag:
         print(burst)
 

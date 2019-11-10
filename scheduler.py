@@ -36,8 +36,8 @@ class Scheduler(object):
         timing_list = [None] * int(self.exec_time)
         # Sort tasks by deadline
         tasks = sorted(iter(tasks), key=lambda task: task.deadline)
-        for task in tasks:
-            print(task)
+        # for task in tasks:
+        #     print(task)
 
         for task in tasks:
             exec_time = copy.deepcopy(task.wcet1188)
