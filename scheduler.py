@@ -1,4 +1,5 @@
 import copy
+from task import Task
 from itertools import groupby
 
 
@@ -23,15 +24,20 @@ class Scheduler(object):
         elif self.sch_type.lower() == 'rm' and self.ee is False:
             timing_list = self.RM(tasks)
         elif self.sch_type.lower() == 'edf' and self.ee is True:
-            timing_list = self.EDF_EE()
+            timing_list = self.EDF_EE(tasks)
         elif self.sch_type.lower() == 'rm' and self.ee is True:
-            timing_list = self.RM_EE()
+            timing_list = self.RM_EE(tasks)
         return timing_list
 
     def EDF(self, tasks):
         pass
 
     def RM(self, tasks):
+        task_dict = {}
+        for task in tasks:
+            task_dict[task.name] = task
+        for task in tasks:
+            task.ap = self.ap1188
         # Create empty timing list
         timing_list = [None] * int(self.exec_time)
         # Sort tasks by deadline
@@ -40,7 +46,7 @@ class Scheduler(object):
         #     print(task)
 
         for task in tasks:
-            exec_time = copy.deepcopy(task.wcet1188)
+            exec_time = copy.deepcopy(task.wcet)
             # Construct deadlines list for Task
             x = 1
             count = 0
@@ -60,10 +66,10 @@ class Scheduler(object):
             # Schedule task
             for start, end in deadlines:
                 pos = start - 1
-                exec_time = copy.deepcopy(task.wcet1188)
+                exec_time = copy.deepcopy(task.wcet)
                 while(exec_time > 0 and pos < self.exec_time):
                     if timing_list[pos] is None:
-                        timing_list[pos] = task.name
+                        timing_list[pos] = task
                         exec_time -= 1
                     pos += 1
                     # If deadline is missed, return empty list
@@ -75,19 +81,32 @@ class Scheduler(object):
         for key, group in groupby(timing_list):
             burst_length = len(list(group))
             end = start + burst_length - 1
-            index = list(str(key))[-1]
-            if str(index).isdigit():
-                res.append((start, key, '1188', end, str(round(burst_length * self.ap1188, 3)) + 'J'))
+
+            if isinstance(key, Task):
+                res.append((start, key.name, '1188', end, round(burst_length * key.ap, 3)))
             else:
-                res.append((start, 'IDLE', 'IDLE', end, str(round(burst_length * self.apidle, 3)) + 'J'))
+                res.append((start, 'IDLE', 'IDLE', end, round(burst_length * self.apidle, 3)))
             start = end + 1
         return res
 
-    def EDF_EE(self):
+    def EDF_EE(self, tasks):
         pass
 
-    def RM_EE(self):
-        pass
+    def RM_EE(self, tasks):
+        for task in tasks:
+            self.find_ee_fz(task)
+        return []
+
+    def find_ee_fz(self, task):
+        minimum = round(self.ap1188 * task.wcet1188, 3)
+        print("{} at {} consumes {} per burst.".format(task.name, '1188hz', minimum))
+        minimum = round(self.ap918 * task.wcet918, 3)
+        print("{} at {} consumes {} per burst.".format(task.name, '918hz', minimum))
+        minimum = round(self.ap648 * task.wcet648, 3)
+        print("{} at {} consumes {} per burst.".format(task.name, '648hz', minimum))
+        minimum = round(self.ap384 * task.wcet384, 3)
+        print("{} at {} consumes {} per burst.".format(task.name, '384hz', minimum))
+        print(' ')
 
     def __str__(self):
         return "Scheduler: {} {} {} {} {} {} {} ({} {})".format(self.task_count, self.exec_time, self.ap1188,

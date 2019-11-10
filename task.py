@@ -7,6 +7,8 @@ class Task(object):
         self.wcet918 = int(wcet918)
         self.wcet648 = int(wcet648)
         self.wcet384 = int(wcet384)
+        self.wcet = self.wcet1188
+        self.ap = None
 
     def __str__(self):
         return "Task: {} {} {} {} {} {}".format(self.name, self.deadline, self.wcet1188, self.wcet918, self.wcet648, self.wcet384)
