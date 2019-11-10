@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import argparse
 from task import Task
 from scheduler import Scheduler
@@ -35,18 +36,16 @@ def main():
     schedule_type = args.scheduler
     EE_enable = False if args.EE is '' else True
 
-    print('SCH: {}'.format(schedule_type))
-    print('EE: {}'.format(EE_enable))
+    print("Scheduling {} with {} {}".format(file_name, schedule_type, args.EE))
 
     sch = create_scheduler(file_name, schedule_type, EE_enable)
     tasks = create_tasks(file_name)
 
-    print('-----')
-    print(sch)
-    for task in tasks:
-        print(task)
-
-    sch.schedule(tasks)
+    timing_diag = sch.schedule(tasks)
+    if len(timing_diag) == 0:
+        print('COULD NOT SCHEDULE')
+    for burst in timing_diag:
+        print(burst)
 
 
 if __name__ == '__main__':
