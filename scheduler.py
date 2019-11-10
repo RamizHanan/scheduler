@@ -18,6 +18,8 @@ class Scheduler(object):
         self.ee = ee
 
     def schedule(self, tasks):
+        for task in tasks:
+            task.ap = self.ap1188
         timing_list = None
         if self.sch_type.lower() == 'edf' and self.ee is False:
             timing_list = self.EDF(tasks)
@@ -33,11 +35,6 @@ class Scheduler(object):
         pass
 
     def RM(self, tasks):
-        task_dict = {}
-        for task in tasks:
-            task_dict[task.name] = task
-        for task in tasks:
-            task.ap = self.ap1188
         # Create empty timing list
         timing_list = [None] * int(self.exec_time)
         # Sort tasks by deadline
@@ -93,20 +90,28 @@ class Scheduler(object):
         pass
 
     def RM_EE(self, tasks):
+        print(self.calc_rm(tasks))
+        s = []
+        tasks = sorted(iter(tasks), key=lambda task: (self.get_next(task)[0] - task.wcet) / task.deadline)
+        while(self.calc_rm(tasks)):
+            tasks[0].wcet, tasks[0].ap = self.get_next(tasks[0])
+            tasks = sorted(iter(tasks), key=lambda task: (self.get_next(task)[0] - task.wcet) / task.deadline)
+        s = self.RM(tasks)
         for task in tasks:
-            self.find_ee_fz(task)
-        return []
+            print('{} {}'.format(task.name, task.ap))
+        return s
 
-    def find_ee_fz(self, task):
-        minimum = round(self.ap1188 * task.wcet1188, 3)
-        print("{} at {} consumes {} per burst.".format(task.name, '1188hz', minimum))
-        minimum = round(self.ap918 * task.wcet918, 3)
-        print("{} at {} consumes {} per burst.".format(task.name, '918hz', minimum))
-        minimum = round(self.ap648 * task.wcet648, 3)
-        print("{} at {} consumes {} per burst.".format(task.name, '648hz', minimum))
-        minimum = round(self.ap384 * task.wcet384, 3)
-        print("{} at {} consumes {} per burst.".format(task.name, '384hz', minimum))
-        print(' ')
+    def calc_rm(self, tasks):
+        right = round(self.task_count * (2**(1 / self.task_count) - 1), 4)
+        left = 0
+        for task in tasks:
+            left += task.wcet / task.deadline
+        return left <= right
+
+    def get_next(self, task):
+        d = {task.wcet1188: (task.wcet918, self.ap918), task.wcet918: (
+            task.wcet648, self.ap648), task.wcet648: (task.wcet384, self.ap384)}
+        return d[task.wcet]
 
     def __str__(self):
         return "Scheduler: {} {} {} {} {} {} {} ({} {})".format(self.task_count, self.exec_time, self.ap1188,

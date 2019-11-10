@@ -49,7 +49,7 @@ def main():
         total_energy += burst[4]
         print(burst)
 
-    print('Total energy consumed: {}'.format(total_energy))
+    print('Total energy consumed: {}'.format(round(total_energy, 3)))
 
 
 if __name__ == '__main__':
