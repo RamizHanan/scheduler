@@ -41,11 +41,15 @@ def main():
     sch = create_scheduler(file_name, schedule_type, EE_enable)
     tasks = create_tasks(file_name)
 
+    total_energy = 0
     timing_diag = sch.schedule(tasks)
     if len(timing_diag) == 0:
         print('COULD NOT SCHEDULE')
     for burst in timing_diag:
+        total_energy += burst[4]
         print(burst)
+
+    print('Total energy consumed: {}'.format(round(total_energy, 3)))
 
 
 if __name__ == '__main__':

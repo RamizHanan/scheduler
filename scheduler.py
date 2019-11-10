@@ -1,4 +1,5 @@
 import copy
+from task import Task
 from itertools import groupby
 
 
@@ -17,15 +18,17 @@ class Scheduler(object):
         self.ee = ee
 
     def schedule(self, tasks):
+        for task in tasks:
+            task.ap = self.ap1188
         timing_list = None
         if self.sch_type.lower() == 'edf' and self.ee is False:
             timing_list = self.EDF(tasks)
         elif self.sch_type.lower() == 'rm' and self.ee is False:
             timing_list = self.RM(tasks)
         elif self.sch_type.lower() == 'edf' and self.ee is True:
-            timing_list = self.EDF_EE()
+            timing_list = self.EDF_EE(tasks)
         elif self.sch_type.lower() == 'rm' and self.ee is True:
-            timing_list = self.RM_EE()
+            timing_list = self.RM_EE(tasks)
         return timing_list
 
     def EDF(self, tasks):
@@ -40,7 +43,7 @@ class Scheduler(object):
         #     print(task)
 
         for task in tasks:
-            exec_time = copy.deepcopy(task.wcet1188)
+            exec_time = copy.deepcopy(task.wcet)
             # Construct deadlines list for Task
             x = 1
             count = 0
@@ -60,10 +63,10 @@ class Scheduler(object):
             # Schedule task
             for start, end in deadlines:
                 pos = start - 1
-                exec_time = copy.deepcopy(task.wcet1188)
+                exec_time = copy.deepcopy(task.wcet)
                 while(exec_time > 0 and pos < self.exec_time):
                     if timing_list[pos] is None:
-                        timing_list[pos] = task.name
+                        timing_list[pos] = task
                         exec_time -= 1
                     pos += 1
                     # If deadline is missed, return empty list
@@ -75,19 +78,40 @@ class Scheduler(object):
         for key, group in groupby(timing_list):
             burst_length = len(list(group))
             end = start + burst_length - 1
-            index = list(str(key))[-1]
-            if str(index).isdigit():
-                res.append((start, key, '1188', end, round(burst_length * self.ap1188, 3)))
+
+            if isinstance(key, Task):
+                res.append((start, key.name, '1188', end, round(burst_length * key.ap, 3)))
             else:
                 res.append((start, 'IDLE', 'IDLE', end, round(burst_length * self.apidle, 3)))
             start = end + 1
         return res
 
-    def EDF_EE(self):
+    def EDF_EE(self, tasks):
         pass
 
-    def RM_EE(self):
-        pass
+    def RM_EE(self, tasks):
+        print(self.calc_rm(tasks))
+        s = []
+        tasks = sorted(iter(tasks), key=lambda task: (self.get_next(task)[0] - task.wcet) / task.deadline)
+        while(self.calc_rm(tasks)):
+            tasks[0].wcet, tasks[0].ap = self.get_next(tasks[0])
+            tasks = sorted(iter(tasks), key=lambda task: (self.get_next(task)[0] - task.wcet) / task.deadline)
+        s = self.RM(tasks)
+        for task in tasks:
+            print('{} {}'.format(task.name, task.ap))
+        return s
+
+    def calc_rm(self, tasks):
+        right = round(self.task_count * (2**(1 / self.task_count) - 1), 4)
+        left = 0
+        for task in tasks:
+            left += task.wcet / task.deadline
+        return left <= right
+
+    def get_next(self, task):
+        d = {task.wcet1188: (task.wcet918, self.ap918), task.wcet918: (
+            task.wcet648, self.ap648), task.wcet648: (task.wcet384, self.ap384)}
+        return d[task.wcet]
 
     def __str__(self):
         return "Scheduler: {} {} {} {} {} {} {} ({} {})".format(self.task_count, self.exec_time, self.ap1188,
