@@ -36,6 +36,8 @@ class Scheduler(object):
         timing_list = [None] * int(self.exec_time)
         # Sort tasks by deadline
         tasks = sorted(iter(tasks), key=lambda task: task.deadline)
+        for task in tasks:
+            print(task)
 
         for task in tasks:
             exec_time = copy.deepcopy(task.wcet1188)
@@ -75,8 +77,7 @@ class Scheduler(object):
             end = start + burst_length - 1
             index = list(str(key))[-1]
             if str(index).isdigit():
-                curr_task = tasks[int(index) - 1]
-                res.append((start, curr_task.name, '1188', end, round(burst_length * self.ap1188, 3)))
+                res.append((start, key, '1188', end, round(burst_length * self.ap1188, 3)))
             else:
                 res.append((start, 'IDLE', 'IDLE', end, round(burst_length * self.apidle, 3)))
             start = end + 1

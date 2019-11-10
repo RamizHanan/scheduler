@@ -42,7 +42,8 @@ def main():
     tasks = create_tasks(file_name)
 
     timing_diag = sch.schedule(tasks)
-    print(timing_diag)
+    for burst in timing_diag:
+        print(burst)
 
 
 if __name__ == '__main__':
