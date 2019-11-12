@@ -26,6 +26,7 @@ class Scheduler(object):
 
     def getNextTask(self, deadlineList, currentTime,deadlineIteration, distanceTillDeadline, nextDeadline):
         for task in deadlineList: #loop over all tasks
+            #move to execution function
             if currentTime == int(nextDeadline[task]): #if time has reached a deadline: 
                 #self note: execution time should be 0 already
                 nextDeadline[task] = int(deadlineIteration[task]) * int(deadlineList[task]) #update its next deadline
@@ -84,6 +85,7 @@ class Scheduler(object):
 
         #for time in range(1, int(totalTime)):
         next = self.getNextTask(deadlineList, currentTime, deadlineIteration, distanceTillDeadline, nextDeadline)
+        #execute(next)
         currentTime += 1
 
         edf.append(next)
