@@ -11,6 +11,7 @@ class Scheduler(object):
         self.apidle = apidle
         self.sch_type = sch_type
         self.ee = ee
+
         
 
     def schedule(self, tasks):
@@ -23,20 +24,74 @@ class Scheduler(object):
         elif self.sch_type.lower() == 'rm' and self.ee is True:
             self.RM_EE()
 
-    def EDF(self, tasks):
-        # for i in range(len(tasks)):
-        #     print(tasks[i].name)
+    def getNextTask(self, deadlineList, currentTime,deadlineIteration, distanceTillDeadline, nextDeadline):
+        for task in deadlineList: #loop over all tasks
+            if currentTime == int(nextDeadline[task]): #if time has reached a deadline: 
+                #self note: execution time should be 0 already
+                nextDeadline[task] = int(deadlineIteration[task]) * int(deadlineList[task]) #update its next deadline
+                deadlineIteration[task] += 1 #increment next deadline multiplier for that task
 
-         #Check utilization
+            #create time to next deadline for each task
+            distanceTillDeadline[task] = int(nextDeadline[task]) - int(currentTime) 
+
+        # Using all() + list comprehension 
+        # Finding min value (deadline) in dict
+        next =  [key for key in distanceTillDeadline if
+                all(distanceTillDeadline[temp] >= distanceTillDeadline[key] 
+                for temp in distanceTillDeadline)] 
+
+        return str(next[0])
+
+
+    # def executeTask(self,readyList, task):
+    #     readyList[task] -= 1
+
+
+    #     pass
+
+
+# name: str, deadline: int, wcet1188: int, wcet918: int, wcet648: int, wcet384: int
+    def EDF(self, tasks) -> list:
+        readyList = {} #list of remaining execution times
+        deadlineList = {} #constant list of deadlines
+        deadlineIteration = {} #list of deadline iterations
+        distanceTillDeadline = {} #which task got next
+        nextDeadline = {} 
+        edf = []
+        currentTime = 1
+        totalTime = int(self.exec_time) + 1
+                                         
+        #Check utilization
         utilization = 0
         for taskNum in range(len(tasks)):
             execution = tasks[taskNum].wcet1188
             deadline = tasks[taskNum].deadline
-            utilization += float(execution) / float(deadline)
-            
-            print(utilization)
-        if utilization > 1:
+            utilization += float(execution) / float(deadline)    
+        print("util amount {}".format(utilization))
+
+        if utilization > 1.0:
             print('Utilization error!')
+            return edf
+
+        #initial loading
+        for i in range(len(tasks)):
+            readyList[tasks[i].name] = int(tasks[i].wcet1188) #initialize execution times
+            deadlineList[tasks[i].name] = int(tasks[i].deadline) #initialize deadlines
+            nextDeadline[tasks[i].name] = int(tasks[i].deadline) #duplicate of deadline list initially
+            deadlineIteration[tasks[i].name] = 2 #next deadline is 2 * initial deadline...then 3 .. 4
+            distanceTillDeadline[tasks[i].name] = 0 #used to determine who got next
+        
+
+        #for time in range(1, int(totalTime)):
+        next = self.getNextTask(deadlineList, currentTime, deadlineIteration, distanceTillDeadline, nextDeadline)
+        currentTime += 1
+
+        edf.append(next)
+
+        #deadline table
+        #always take min of deadline table
+        #each step update execution left 
+
 
         pass
 
