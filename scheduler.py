@@ -80,7 +80,7 @@ class Scheduler(object):
             end = start + burst_length - 1
 
             if isinstance(key, Task):
-                res.append((start, key.name, '1188', end, round(burst_length * key.ap, 3)))
+                res.append((start, key.name, '1188', burst_length, round(burst_length * key.ap, 3)))
             else:
                 res.append((start, 'IDLE', 'IDLE', end, round(burst_length * self.apidle, 3)))
             start = end + 1
