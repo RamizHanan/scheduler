@@ -58,9 +58,13 @@ class Scheduler(object):
             idle = True
 
         return idle
-
+    
     def checkExecutionFinished(self,readyList, task, time, executionTimes,
                     deadlineIteration, nextDeadline, returnTime, deadlineList):
+        '''   
+        this needs to be checked for every task at evert time unit.. if a task has 0 execution left,
+        then compare time to its return time and update if necessary
+        '''
         #next return time is the next deadline
         if readyList[task] == 0 and time == int(returnTime[task]):
             returnTime[task] = int(nextDeadline[task])#next return time is the next deadline
@@ -116,6 +120,7 @@ class Scheduler(object):
             returnTime[tasks[i].name] = int(tasks[i].deadline) #list for return times to the system
             deadlineIteration[tasks[i].name] = 2 #next deadline is 2 * initial deadline...then 3 .. 4
             distanceTillDeadline[tasks[i].name] = 0 #used to determine who got next
+            executionTimes[tasks[i].name] = int(tasks[i].wcet1188) #execution table
         
 
         for time in range(1, int(totalTime)):
@@ -124,16 +129,9 @@ class Scheduler(object):
                     deadlineIteration, nextDeadline, returnTime, deadlineList)
             
             edf.append(executeTask)
-            time += 1
 
         print(str(edf))
         return edf
-
-    def RM(self, tasks):
-        time_units = [None] * self.exec_time
-
-    def EDF(self, tasks):
-        pass
 
     def RM(self, tasks):
         # Create empty timing list
