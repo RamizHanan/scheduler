@@ -2,7 +2,6 @@ import copy
 from task import Task
 from itertools import groupby
 
-
 class Scheduler(object):
 
     def __init__(self, task_count: int, exec_time: int, ap1188: int, ap918: int,
@@ -32,12 +31,20 @@ class Scheduler(object):
         return timing_list
 
         
-    def getNextTask(self, deadlineList, time, distanceTillDeadline, nextDeadline, readyList):
-        
+    def getNextTask(self, deadlineList, time, nextDeadline, readyList):
+        distanceTillDeadline = {}
+        unfinishedTasksDeadlines = {}
+
         if(self.idleCheck(readyList, time, nextDeadline) == True):
             return 'IDLE'
 
-        for task in deadlineList: #loop over all tasks
+        #exclude items with 0 execution left
+        for (task, executionLeft) in readyList.items():
+            if executionLeft != 0:
+                unfinishedTasksDeadlines[task] = nextDeadline[task]
+
+
+        for task in unfinishedTasksDeadlines: #loop over all tasks
             #update distance until deadline
             distanceTillDeadline[task] = int(nextDeadline[task]) - int(time) 
 
@@ -45,32 +52,37 @@ class Scheduler(object):
         # Finding min value (deadline) in dict
         next =  [key for key in distanceTillDeadline if
                 all(distanceTillDeadline[temp] >= distanceTillDeadline[key] 
-                for temp in distanceTillDeadline)] 
+                for temp in distanceTillDeadline)]
 
-        return str(next[0])
+        if(next):
+            return str(next[0])
+
+        return 'IDLE'
 
     def idleCheck(self, readyList, time, nextDeadline):
         idle = False
                 
         #if all execution times are 0 and there is time left until all their deadlines
         if (all(executeTime == 0 for executeTime in readyList.values()) and 
-            all(deadline > time for deadline in nextDeadline.value())):
+            all(deadline > time for deadline in nextDeadline.values())):
             idle = True
 
         return idle
     
-    def checkExecutionFinished(self,readyList, task, time, executionTimes,
+    def checkExecutionFinished(self,readyList, time, executionTimes,
                     deadlineIteration, nextDeadline, returnTime, deadlineList):
         '''   
         this needs to be checked for every task at evert time unit.. if a task has 0 execution left,
         then compare time to its return time and update if necessary
         '''
+        for task, executionTime in readyList.items():
+            if executionTime == 0 and time == int(returnTime[task]):
+                nextDeadline[task] = int(deadlineIteration[task]) * int(deadlineList[task]) #update its next deadline
+                returnTime[task] = int(nextDeadline[task])#next return time is the next deadline
+                readyList[task] = executionTimes[task] #reset execution
+                deadlineIteration[task] += 1 #increment next deadline multiplier for that task
         #next return time is the next deadline
-        if readyList[task] == 0 and time == int(returnTime[task]):
-            returnTime[task] = int(nextDeadline[task])#next return time is the next deadline
-            readyList[task] = executionTimes[task] #reset execution
-            nextDeadline[task] = int(deadlineIteration[task]) * int(deadlineList[task]) #update its next deadline
-            deadlineIteration[task] += 1 #increment next deadline multiplier for that task
+            
 
     def executeTask(self,readyList, task, time, executionTimes,
                     deadlineIteration, nextDeadline, returnTime, deadlineList):
@@ -81,11 +93,17 @@ class Scheduler(object):
         readyList[task] -= 1
         executed = task
 
-        self.checkExecutionFinished(readyList, task, time, executionTimes,
-                                    deadlineIteration, nextDeadline, returnTime, deadlineList)
-        
         return executed
 
+    def checkEdfUtilization(self,tasks):
+         #Check utilization
+        utilization = 0
+        for taskNum in range(len(tasks)):
+            execution = tasks[taskNum].wcet1188
+            deadline = tasks[taskNum].deadline
+            utilization += float(execution) / float(deadline)
+
+        return utilization
 
 # name: str, deadline: int, wcet1188: int, wcet918: int, wcet648: int, wcet384: int
     def EDF(self, tasks) -> list:
@@ -97,18 +115,10 @@ class Scheduler(object):
         nextDeadline = {}
         returnTime = {} 
         edf = []
-        time = 1
         totalTime = int(self.exec_time) + 1
                                          
-        #Check utilization
-        utilization = 0
-        for taskNum in range(len(tasks)):
-            execution = tasks[taskNum].wcet1188
-            deadline = tasks[taskNum].deadline
-            utilization += float(execution) / float(deadline)    
-        #print("util amount {}".format(utilization))
-
-        if utilization > 1.0:
+        #EDF utilization checker 2.0 BETA
+        if self.checkEdfUtilization(tasks) > 1.0:
             print('Utilization error!')
             return edf
 
@@ -119,16 +129,19 @@ class Scheduler(object):
             nextDeadline[tasks[i].name] = int(tasks[i].deadline) #duplicate of deadline list initially
             returnTime[tasks[i].name] = int(tasks[i].deadline) #list for return times to the system
             deadlineIteration[tasks[i].name] = 2 #next deadline is 2 * initial deadline...then 3 .. 4
-            distanceTillDeadline[tasks[i].name] = 0 #used to determine who got next
             executionTimes[tasks[i].name] = int(tasks[i].wcet1188) #execution table
         
 
         for time in range(1, int(totalTime)):
-            nextTask = self.getNextTask(deadlineList, time, distanceTillDeadline, nextDeadline, readyList)
+            
+            nextTask = self.getNextTask(deadlineList, time, nextDeadline, readyList)
             executeTask = self.executeTask(readyList, nextTask, time, executionTimes,
                     deadlineIteration, nextDeadline, returnTime, deadlineList)
+            self.checkExecutionFinished(readyList, time, executionTimes,
+                                    deadlineIteration, nextDeadline, returnTime, deadlineList)
             
             edf.append(executeTask)
+            #print(executeTask,time)
 
         print(str(edf))
         return edf
@@ -216,3 +229,17 @@ class Scheduler(object):
         return "Scheduler: {} {} {} {} {} {} {} ({} {})".format(self.task_count, self.exec_time, self.ap1188,
                                                                 self.ap918, self.ap648, self.ap384, self.apidle,
                                                                 self.sch_type, self.ee)
+
+
+
+
+
+#   for task in deadlineList: #loop over all tasks
+#             #update distance until deadline
+#             distanceTillDeadline[task] = int(nextDeadline[task]) - int(time) 
+
+#         # Using all() + list comprehension 
+#         # Finding min value (deadline) in dict
+#         next =  [key for key in distanceTillDeadline if
+#                 all(distanceTillDeadline[temp] >= distanceTillDeadline[key] 
+#                 for temp in distanceTillDeadline)] 
