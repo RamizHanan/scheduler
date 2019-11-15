@@ -9,6 +9,7 @@ class Task(object):
         self.wcet384 = int(wcet384)
         self.wcet = self.wcet1188
         self.ap = None
+        self.hz = '1188'
 
     def __str__(self):
         return "Task: {} {} {} {} {} {}".format(self.name, self.deadline, self.wcet1188, self.wcet918, self.wcet648, self.wcet384)
