@@ -31,8 +31,124 @@ class Scheduler(object):
             timing_list = self.RM_EE(tasks)
         return timing_list
 
-    def EDF(self, tasks):
-        pass
+    def getNextTask(self, deadlineList, time, nextDeadline, readyList):
+        distanceTillDeadline = {}
+        unfinishedTasksDeadlines = {}
+
+        if(self.idleCheck(readyList, time, nextDeadline) is True):
+            return 'IDLE'
+
+        # exclude items with 0 execution left
+        for (task, executionLeft) in readyList.items():
+            if executionLeft != 0:
+                unfinishedTasksDeadlines[task] = nextDeadline[task]
+
+        for task in unfinishedTasksDeadlines:  # loop over all tasks
+            # update distance until deadline
+            distanceTillDeadline[task] = int(nextDeadline[task]) - int(time)
+
+        # Using all() + list comprehension
+        # Finding min value (deadline) in dict
+        next = [key for key in distanceTillDeadline if
+                all(distanceTillDeadline[temp] >= distanceTillDeadline[key]
+                    for temp in distanceTillDeadline)]
+
+        if(next):
+            return str(next[0])
+
+        return 'IDLE'
+
+    def idleCheck(self, readyList, time, nextDeadline):
+        idle = False
+
+        # if all execution times are 0 and there is time left until all their deadlines
+        if (all(executeTime == 0 for executeTime in readyList.values()) and
+                all(deadline > time for deadline in nextDeadline.values())):
+            idle = True
+
+        return idle
+
+    def checkExecutionFinished(self, readyList, time, executionTimes,
+                               deadlineIteration, nextDeadline, returnTime, deadlineList):
+        '''
+        this needs to be checked for every task at evert time unit.. if a task has 0 execution left,
+        then compare time to its return time and update if necessary
+        '''
+        for task, executionTime in readyList.items():
+            if executionTime == 0 and time == int(returnTime[task]):
+                nextDeadline[task] = int(deadlineIteration[task]) * int(deadlineList[task])  # update its next deadline
+                returnTime[task] = int(nextDeadline[task])  # next return time is the next deadline
+                readyList[task] = executionTimes[task]  # reset execution
+                deadlineIteration[task] += 1  # increment next deadline multiplier for that task
+        # next return time is the next deadline
+
+    def executeTask(self, readyList, task, time, executionTimes,
+                    deadlineIteration, nextDeadline, returnTime, deadlineList):
+        if task == "IDLE":
+            return task
+
+        # execute
+        readyList[task] -= 1
+        executed = task
+
+        return executed
+
+    def checkEdfUtilization(self, tasks):
+        # Check utilization
+        utilization = 0
+        for taskNum in range(len(tasks)):
+            execution = tasks[taskNum].wcet
+            deadline = tasks[taskNum].deadline
+            utilization += float(execution) / float(deadline)
+
+        return utilization
+
+    # name: str, deadline: int, wcet1188: int, wcet918: int, wcet648: int, wcet384: int
+    def EDF(self, tasks) -> list:
+        nametoobj = {}
+        for obj in tasks:
+            nametoobj[obj.name] = obj
+
+        nametoobj['IDLE'] = 'IDLE'
+
+
+        readyList = {}  # list of remaining execution times
+        executionTimes = {}  # constant list of execution times
+        deadlineList = {}  # constant list of deadlines
+        deadlineIteration = {}  # list of deadline iterations
+        nextDeadline = {}
+        returnTime = {}
+        edf = []
+        totalTime = int(self.exec_time) + 1
+
+        # EDF utilization checker 2.0 BETA
+        if self.checkEdfUtilization(tasks) > 1.0:
+            print('Utilization error!')
+            return edf
+
+        # initial loading
+        for i in range(len(tasks)):
+            readyList[tasks[i].name] = int(tasks[i].wcet)  # initialize execution times
+            deadlineList[tasks[i].name] = int(tasks[i].deadline)  # initialize deadlines
+            nextDeadline[tasks[i].name] = int(tasks[i].deadline)  # duplicate of deadline list initially
+            returnTime[tasks[i].name] = int(tasks[i].deadline)  # list for return times to the system
+            deadlineIteration[tasks[i].name] = 2  # next deadline is 2 * initial deadline...then 3 .. 4
+            executionTimes[tasks[i].name] = int(tasks[i].wcet)  # execution table
+
+        for time in range(1, int(totalTime)):
+
+            nextTask = self.getNextTask(deadlineList, time, nextDeadline, readyList)
+            executeTask = self.executeTask(readyList, nextTask, time, executionTimes,
+                                           deadlineIteration, nextDeadline, returnTime, deadlineList)
+            self.checkExecutionFinished(readyList, time, executionTimes,
+                                        deadlineIteration, nextDeadline, returnTime, deadlineList)
+
+            edf.append(nametoobj[executeTask])
+            # print(executeTask,time)
+
+        # print(str(edf))
+        yeet = self.construct_output(edf)
+        return yeet
 
     def RM(self, tasks):
         # Create empty timing list
@@ -73,33 +189,51 @@ class Scheduler(object):
                     if pos > end:
                         return []
         # Construct output
+        return self.construct_output(timing_list)
+
+    def construct_output(self, schedule_list):
+        # Construct output
         res = []
         start = 1
-        for key, group in groupby(timing_list):
+        for key, group in groupby(schedule_list):
             burst_length = len(list(group))
             end = start + burst_length - 1
 
             if isinstance(key, Task):
-                res.append((start, key.name, '1188', burst_length, round(burst_length * key.ap, 3)))
+                res.append((start, key.name, key.hz, burst_length, round(burst_length * key.ap, 3)))
             else:
-                res.append((start, 'IDLE', 'IDLE', end, round(burst_length * self.apidle, 3)))
+                res.append((start, 'IDLE', 'IDLE', burst_length, round(burst_length * self.apidle, 3)))
             start = end + 1
         return res
 
     def EDF_EE(self, tasks):
-        pass
+        s = []
+        tasks = sorted(iter(tasks), key=lambda task: (self.get_next(task)[0] - task.wcet) / task.deadline)
+        # Use deep copy to get previous tasks once it fails
+        ptasks = None
+        while(self.calc_edf(tasks)):
+            ptasks = copy.deepcopy(tasks)
+            tasks[0].wcet, tasks[0].ap, tasks[0].hz = self.get_next(tasks[0])
+            tasks = sorted(iter(tasks), key=lambda task: (self.get_next(task)[0] - task.wcet) / task.deadline)
+        s = self.EDF(ptasks)
+        return s
 
     def RM_EE(self, tasks):
-        print(self.calc_rm(tasks))
         s = []
         tasks = sorted(iter(tasks), key=lambda task: (self.get_next(task)[0] - task.wcet) / task.deadline)
         while(self.calc_rm(tasks)):
-            tasks[0].wcet, tasks[0].ap = self.get_next(tasks[0])
+            tasks[0].wcet, tasks[0].ap, tasks[0].hz = self.get_next(tasks[0])
             tasks = sorted(iter(tasks), key=lambda task: (self.get_next(task)[0] - task.wcet) / task.deadline)
+
         s = self.RM(tasks)
-        for task in tasks:
-            print('{} {}'.format(task.name, task.ap))
         return s
+
+    def calc_edf(self, tasks):
+        right = 1.0
+        left = 0.0
+        for task in tasks:
+            left += task.wcet / task.deadline
+        return left <= right
 
     def calc_rm(self, tasks):
         right = round(self.task_count * (2**(1 / self.task_count) - 1), 4)
@@ -109,8 +243,8 @@ class Scheduler(object):
         return left <= right
 
     def get_next(self, task):
-        d = {task.wcet1188: (task.wcet918, self.ap918), task.wcet918: (
-            task.wcet648, self.ap648), task.wcet648: (task.wcet384, self.ap384)}
+        d = {task.wcet1188: (task.wcet918, self.ap918, '918'), task.wcet918: (
+            task.wcet648, self.ap648, '648'), task.wcet648: (task.wcet384, self.ap384, '384')}
         return d[task.wcet]
 
     def __str__(self):
