@@ -43,13 +43,15 @@ def main():
 
     total_energy = 0
     timing_diag = sch.schedule(tasks)
+    print('\n{:5}    {:4}   {:4}    {:4}    {:6}'.format('start', 'task', 'hz', 'time', 'energy'))
     if len(timing_diag) == 0:
         print('COULD NOT SCHEDULE')
     for burst in timing_diag:
         total_energy += burst[4]
-        print(burst)
+        # (984, 'w2', '648', 17, 5.219)
+        print('{:5}    {:4}   {:4}    {:4}    {:6}J'.format(*burst))
 
-    print('Total energy consumed: {}'.format(round(total_energy, 3)))
+    print('\n\nTotal energy consumed: {}'.format(round(total_energy, 3)))
 
 
 if __name__ == '__main__':
