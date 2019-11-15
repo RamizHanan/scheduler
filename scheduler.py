@@ -65,7 +65,7 @@ class Scheduler(object):
         if (all(executeTime == 0 for executeTime in readyList.values()) and
                 all(deadline > time for deadline in nextDeadline.values())):
             idle = True
-
+            
         return idle
 
     def checkExecutionFinished(self, readyList, time, executionTimes,
