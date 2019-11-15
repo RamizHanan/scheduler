@@ -3,4 +3,4 @@ OS task scheduler that can schedule as RM and EDF, both using energy efficient a
 - [X] RM
 - [x] RM EE
 - [x] EDF
-- [ ] EDF EE
+- [x] EDF EE
