@@ -5,14 +5,17 @@ OS task scheduler that can schedule as Rate Monotonic and Erliest Deadline First
 
 __How to use:__
 
+python3 main.py [text file] [schedule method] [optional: ee]
+
+Example:
 ```
-python main.py input1.txt rm
+python3 main.py input1.txt rm
 
-python main.py input1.txt rm ee
+python3 main.py input1.txt rm ee
 
-python main.py input1.txt edf
+python3 main.py input1.txt edf
 
-python main.py input1.txt edf ee
+python3 main.py input1.txt edf ee
 ```
 
 __STATUS:__
