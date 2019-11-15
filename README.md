@@ -1,13 +1,13 @@
 # Task Scheduler
 
-# Contributers:
+__Contributers:__
 - Rigoberto Macedo  
 - Ramiz Hanan
 
-# Description:
+__Description:__
 OS task scheduler that can schedule as Rate Monotonic and Erliest Deadline First, both using energy efficient and non energy efficient modes.
 
-# STATUS:
+__STATUS:__
 - [X] RM
 - [x] RM EE
 - [x] EDF
