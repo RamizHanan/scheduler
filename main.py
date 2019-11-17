@@ -42,16 +42,22 @@ def main():
     tasks = create_tasks(file_name)
 
     total_energy = 0
-    timing_diag = sch.schedule(tasks)
-    print('\n{:5}    {:4}   {:4}    {:4}    {:6}'.format('start', 'task', 'hz', 'time', 'energy'))
-    if len(timing_diag) == 0:
+    output = sch.schedule(tasks)
+    if isinstance(output, list):
         print('COULD NOT SCHEDULE')
+        return 0
+    timing_diag = output['sch']
+
+    print('\n{:5}    {:4}   {:4}    {:4}    {:6}'.format('start', 'task', 'hz', 'time', 'energy'))
     for burst in timing_diag:
         total_energy += burst[4]
         # (984, 'w2', '648', 17, 5.219)
         print('{:5}    {:4}   {:4}    {:4}    {:6}J'.format(*burst))
 
     print('\n\nTotal energy consumed: {}'.format(round(total_energy, 3)))
+    print('Percent of time in IDLE: {}%'.format(output['percent']['IDLE'] * 100))
+    print('Percent of time in not in IDLE: {}%'.format(output['percent']['NOT_IDLE'] * 100))
+    print('Execution time: {}'.format(sch.exec_time))
 
 
 if __name__ == '__main__':
