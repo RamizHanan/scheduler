@@ -182,6 +182,7 @@ class Scheduler(object):
                     pos += 1
                     # If deadline is missed, return empty list
                     if pos > end:
+                        print('\nDeadline missed for {} at {}.'.format(task.name, pos - 1))
                         return []
         # Construct output
         return self.construct_output(timing_list)
@@ -203,6 +204,7 @@ class Scheduler(object):
             start = end + 1
         res['percent']['IDLE'] = (schedule_list.count(None) + schedule_list.count('IDLE')) / self.exec_time
         res['percent']['NOT_IDLE'] = 1 - res['percent']['IDLE']
+        res['total_exec'] = self.exec_time - (schedule_list.count(None) + schedule_list.count('IDLE'))
         return res
 
     def EDF_EE(self, tasks):
