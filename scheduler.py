@@ -65,7 +65,7 @@ class Scheduler(object):
         if (all(executeTime == 0 for executeTime in readyList.values()) and
                 all(deadline > time for deadline in nextDeadline.values())):
             idle = True
-            
+
         return idle
 
     def checkExecutionFinished(self, readyList, time, executionTimes,
@@ -111,7 +111,6 @@ class Scheduler(object):
 
         nametoobj['IDLE'] = 'IDLE'
 
-
         readyList = {}  # list of remaining execution times
         executionTimes = {}  # constant list of execution times
         deadlineList = {}  # constant list of deadlines
@@ -144,9 +143,7 @@ class Scheduler(object):
                                         deadlineIteration, nextDeadline, returnTime, deadlineList)
 
             edf.append(nametoobj[executeTask])
-            # print(executeTask,time)
 
-        # print(str(edf))
         yeet = self.construct_output(edf)
         return yeet
 
@@ -155,8 +152,6 @@ class Scheduler(object):
         timing_list = [None] * int(self.exec_time)
         # Sort tasks by deadline
         tasks = sorted(iter(tasks), key=lambda task: task.deadline)
-        # for task in tasks:
-        #     print(task)
 
         for task in tasks:
             exec_time = copy.deepcopy(task.wcet)
@@ -193,17 +188,21 @@ class Scheduler(object):
 
     def construct_output(self, schedule_list):
         # Construct output
-        res = []
+        res = {}
+        res['sch'] = []
+        res['percent'] = {}
         start = 1
         for key, group in groupby(schedule_list):
             burst_length = len(list(group))
             end = start + burst_length - 1
 
             if isinstance(key, Task):
-                res.append((start, key.name, key.hz, burst_length, round(burst_length * key.ap, 3)))
+                res['sch'].append((start, key.name, key.hz, burst_length, round(burst_length * key.ap, 3)))
             else:
-                res.append((start, 'IDLE', 'IDLE', burst_length, round(burst_length * self.apidle, 3)))
+                res['sch'].append((start, 'IDLE', 'IDLE', burst_length, round(burst_length * self.apidle, 3)))
             start = end + 1
+        res['percent']['IDLE'] = (schedule_list.count(None) + schedule_list.count('IDLE')) / self.exec_time
+        res['percent']['NOT_IDLE'] = 1 - res['percent']['IDLE']
         return res
 
     def EDF_EE(self, tasks):
