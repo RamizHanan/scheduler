@@ -182,6 +182,7 @@ class Scheduler(object):
                     pos += 1
                     # If deadline is missed, return empty list
                     if pos > end:
+                        print('\nDeadline missed for {} at {}.'.format(task.name, pos - 1))
                         return []
         # Construct output
         return self.construct_output(timing_list)
