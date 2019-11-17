@@ -203,6 +203,7 @@ class Scheduler(object):
             start = end + 1
         res['percent']['IDLE'] = (schedule_list.count(None) + schedule_list.count('IDLE')) / self.exec_time
         res['percent']['NOT_IDLE'] = 1 - res['percent']['IDLE']
+        res['total_exec'] = self.exec_time - (schedule_list.count(None) + schedule_list.count('IDLE'))
         return res
 
     def EDF_EE(self, tasks):

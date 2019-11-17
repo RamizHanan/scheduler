@@ -57,7 +57,7 @@ def main():
     print('\n\nTotal energy consumed: {}'.format(round(total_energy, 3)))
     print('Percent of time in IDLE: {}%'.format(output['percent']['IDLE'] * 100))
     print('Percent of time in not in IDLE: {}%'.format(output['percent']['NOT_IDLE'] * 100))
-    print('Execution time: {}'.format(sch.exec_time))
+    print('Execution time: {}'.format(output['total_exec']))
 
 
 if __name__ == '__main__':
